@@ -43,7 +43,8 @@ dependencies:
   app_links:
   record:
   path_provider:
-  shared_preferences: ^2.5.4
+  shared_preferences: ^2.5.4.
+  web_socket_channel: ^2.4.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
