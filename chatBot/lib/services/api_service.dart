@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
+import '../models/chat_ResponseModel.dart';
 import '../models/login_model.dart';
 import '../util/AppPrefrences.dart';
 
 class ApiService {
+
   static const String _baseUrl = 'http://192.168.130.237:8001';
   static const String _chatEndpoint = '/data';
   static const String _loginEndpoint = '/login';
@@ -113,6 +115,47 @@ class ApiService {
   /*                               HELPER METHODS                                */
   /* -------------------------------------------------------------------------- */
 
+  static Future<List<ChatMessageModel>> getChatMessages() async {
+    try {
+      final uri = Uri.parse('$_baseUrl$_chatEndpoint');
+
+      final request = http.Request('GET', uri);
+
+      // Attach token
+      final token = await AppPreferences.getAccessToken();
+      if (token != null && token.isNotEmpty) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      request.headers['Content-Type'] = 'application/json';
+
+      final response = await request.send();
+
+      final body = await response.stream.bytesToString();
+      print("token:$token");
+      print("chat histroy:$body");
+
+      if (response.statusCode == 401) {
+        throw Exception("TOKEN_EXPIRED");
+      }
+
+      if (response.statusCode != 200) {
+        throw Exception("Failed to load chat");
+      }
+
+      // Decode JSON
+      final List<dynamic> data = jsonDecode(body);
+
+      return data.map((e) => ChatMessageModel.fromJson(e)).toList();
+
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                               HELPER METHODS                               */
+  /* -------------------------------------------------------------------------- */
+
   static Future<void> _attachToken(http.MultipartRequest request) async {
     final token = await AppPreferences.getAccessToken();
     if (token != null && token.isNotEmpty) {
@@ -127,4 +170,5 @@ class ApiService {
   static String _errorMessage(int? code, String body) {
     return "Request failed ($code)";
   }
+
 }
